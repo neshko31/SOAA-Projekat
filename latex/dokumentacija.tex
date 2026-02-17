@@ -22,7 +22,7 @@
 
 \section{Opis problema}
 
-Sistem “loptica na gredi” predstavlja klasičan laboratorijski problem. Sistem se sastoji od horizontalne grede čiji se nagib može kontrolisati motorom koji se nalazi na sredini grede i loptice koja se slobodno kotrlja po njoj. Cilj je održati lopticu u željenoj poziciji (na centru) uprkos gravitaciji i brzini loptice, primenom promene ugla nagiba same grede. Glavna ideja jeste upotreba algoritama učenja potkrepljenjem kako bi se loptica mogla zadržati na gredi. Smatra se da je motor na sredini grede idealan i da greda nema svoj moment inercije. Shema ovakvog sistema je data na slici 1.
+Sistem “loptica na gredi” predstavlja klasičan laboratorijski problem. Sistem se sastoji od horizontalne grede čiji se nagib može kontrolisati motorom koji se nalazi na sredini grede i loptice koja se slobodno kotrlja po njoj. Cilj je održati lopticu u željenoj poziciji (na centru) uprkos gravitaciji i brzini loptice, primenom promene ugla nagiba same grede. Glavna ideja jeste da se upotrebom algoritama učenja potkrepljenjem obezbedi zadržavanje loptice na gredi, idealno na sredini. Cilj jeste da obezbedimo da počevši iz bilo kog stanja, o kojima će biti više reči kasnije, agent može da izbalansira samu lopticu. Smatra se da je motor na sredini grede idealan i da greda nema svoj moment inercije. Shema ovakvog sistema je data na slici 1.
 
 \begin{figure}[h!]
 \centering
@@ -36,7 +36,7 @@ Razmatrani sistem se modeluje narednom jednačinom:
 \end{equation}
 
 Jednačina se može pronaći na kraju sekcije 2 u narednom radu: https://www.mdpi.com/2073-8994/14/9/1883.
-Korišćene fizičke veličine zajedno sa njihovim vrednostima su:
+Korišćene fizičke veličine zajedno sa njihovim preporučenim vrednostima su:
 \begin{itemize}
 \item $m$ - masa loptice ($0.113$ $kg$),
 \item $r$ - poluprečnik loptice ($0.015$ $m$),
@@ -90,7 +90,7 @@ a=\ddot{\alpha}\in\{-5 rad/s^2, -2.5 rad/s^2, 0 rad/s^2, 2.5 rad/s^2, 5 rad/s^2\
 Fizički sistem je sad preveden u MPO, uz dobijeni vektor stanja $\underline{z} = (z_1, z_2, z_3, z_4)$, kao i akciju $a$ koja predstavlja ugaono ubrzanje $\ddot{\alpha}$ koje se primenjuje na sredinu grede. Vreme odabiranja je $T$ i njegova vrednost će biti odabrana da bude $0.05$ $s$.
 
 \section{Formiranje nagrade}
-Za formiranje nagrade će biti korišćen DRM pristup, što znači da on predstavlja proizvod različitih evaluacionih funkcija s tim da se za svaku od njih smatra da su neprekidno diferencijabilne. U našem slučaju, nagradu definišemo na sledeći način:
+Za formiranje nagrade će biti korišćen DRM (Detail-Reward Mechanism) pristup, što znači da on predstavlja proizvod različitih evaluacionih funkcija s tim da se za svaku od njih smatra da su neprekidno diferencijabilne. U našem slučaju, nagradu definišemo na sledeći način:
 $$r = h(s,a) = e_0(s,a) \cdot e_1(s,a) \cdot e_2(s,a)$$
 Definicije pojedinačnih evaluacionih funkcija:
 \begin{enumerate}
@@ -132,6 +132,7 @@ Definicije pojedinačnih evaluacionih funkcija:
     \item Implementacija načina dodele nagrade.
     \item Treniranje agenta primenom Q-Learning i SARSA algoritma uz eksperimentisanje sa različitim vrednostima hiperparametra datih algoritama.
     \item Prikaz dobijenih rezultata.
+    \item Kreiranje pomoćnog alata koji će se koristiti za vizualizaciju.
 \end{enumerate}
 
 \begin{thebibliography}{99}
