@@ -1,6 +1,4 @@
-"""
-Ball & Beam — Vizualizacija sa odabirom algoritma (Q-Learning / SARSA)
-"""
+# Ball & Beam — Vizualizacija sa odabirom algoritma (Q-Learning / SARSA)
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -24,8 +22,7 @@ class Enviroment:
         self.actions = [-5, -2.5, 0, 2.5, 5]
 
     def x_ddot(self):
-        return (-self.x_dot * (self.kf * self.r**2) +
-                np.sin(self.alpha) * self.m * self.g * self.r**2) / (self.m * self.r**2 + self.J)
+        return (-self.x_dot * (self.kf * self.r**2) + np.sin(self.alpha) * self.m * self.g * self.r**2) / (self.m * self.r**2 + self.J)
 
     def take_action(self, action):
         self.steps += 1
@@ -51,18 +48,39 @@ class Enviroment:
 # ── Diskretizacija ────────────────────────────────────────────────────────────
 
 N = 20
-x_bins         = np.linspace(-0.2,  0.2,  N + 1)
-x_dot_bins     = np.linspace(-0.5,  0.5,  N + 1)
-alpha_bins     = np.linspace(-0.35, 0.35, N + 1)
-alpha_dot_bins = np.linspace(-1.0,  1.0,  N + 1)
+
+x_th = 0.2
+x_dot_th = 0.5
+alpha_th = 0.35
+alpha_dot_th = 1
+
+x_bins         = np.linspace(-x_th, x_th, N + 1)
+x_dot_bins     = np.linspace(-x_dot_th, x_dot_th, N + 1)
+alpha_bins     = np.linspace(-alpha_th, alpha_th, N + 1)
+alpha_dot_bins = np.linspace(-alpha_dot_th, alpha_dot_th, N + 1)
 
 def discretize(state):
-    x, xd, a, ad = state
-    def idx(v, bins): return max(0, min(np.digitize(v, bins) - 1, N - 1))
-    return (idx(np.clip(x,  -0.2,  0.2),  x_bins),
-            idx(np.clip(xd, -0.5,  0.5),  x_dot_bins),
-            idx(np.clip(a,  -0.35, 0.35), alpha_bins),
-            idx(np.clip(ad, -1.0,  1.0),  alpha_dot_bins))
+    x, x_dot, alpha, alpha_dot = state
+    
+    # clip sprecava pojavu ekstremnih vrednosti tako sto neki autsajder postave na njemu najblizu granicu
+    x = np.clip(x, -x_th, x_th)
+    x_dot = np.clip(x_dot, -x_dot_th, x_dot_th)
+    alpha = np.clip(alpha, -alpha_th, alpha_th)
+    alpha_dot = np.clip(alpha_dot, -alpha_dot_th, alpha_dot_th)
+    
+    # digitize - vraca vrednost bina u koji spada vrednost
+    x_idx = np.digitize(x, x_bins) - 1
+    x_dot_idx = np.digitize(x_dot, x_dot_bins) - 1
+    theta_idx = np.digitize(alpha, alpha_bins) - 1
+    theta_dot_idx = np.digitize(alpha_dot, alpha_dot_bins) - 1
+    
+    # clamp - osigurava da indeks nikad ne izadje van validnog opsega
+    x_idx = max(0, min(x_idx, N - 1))
+    x_dot_idx = max(0, min(x_dot_idx, N - 1))
+    alpha_idx = max(0, min(theta_idx, N - 1))
+    alpha_dot_idx = max(0, min(theta_dot_idx, N - 1))
+    
+    return (x_idx, x_dot_idx, alpha_idx, alpha_dot_idx)
 
 
 # ── Meni za odabir algoritma ──────────────────────────────────────────────────
@@ -123,7 +141,6 @@ def show_menu(Q_ql, Q_sarsa):
 
 def run_visualization(Q, algo_name=''):
     env = Enviroment()
-    x_th, x_dot_th, alpha_th, alpha_dot_th = 0.2, 0.5, 0.35, 1.0
 
     # Boja loptice i naslova zavisi od algoritma
     if 'SARSA' in algo_name:
@@ -135,9 +152,9 @@ def run_visualization(Q, algo_name=''):
 
     def random_state():
         env.reset()
-        env.x         = np.clip(np.random.normal(0, x_th      / 4), -0.19, 0.19)
-        env.x_dot     = np.clip(np.random.normal(0, x_dot_th  / 4), -0.49, 0.49)
-        env.alpha     = np.clip(np.random.normal(0, alpha_th   / 4), -0.34, 0.34)
+        env.x         = np.clip(np.random.normal(0, x_th         / 4), -0.19, 0.19)
+        env.x_dot     = np.clip(np.random.normal(0, x_dot_th     / 4), -0.49, 0.49)
+        env.alpha     = np.clip(np.random.normal(0, alpha_th     / 4), -0.34, 0.34)
         env.alpha_dot = np.clip(np.random.normal(0, alpha_dot_th / 4), -0.99, 0.99)
         return [env.x, env.x_dot, env.alpha, env.alpha_dot]
 
@@ -162,16 +179,11 @@ def run_visualization(Q, algo_name=''):
     ax.axvline(-env.l / 2,   color='#f85149', linestyle=':',  linewidth=0.9, alpha=0.5)
     ax.axvline( env.l / 2,   color='#f85149', linestyle=':',  linewidth=0.9, alpha=0.5)
 
-    # Pivot
-    ax.plot(0, 0, 'o', color='#f9ff46', markersize=8, zorder=5)
-
     # Greda
-    beam_line, = ax.plot([], [], color='#ac6807', linewidth=7,
-                         solid_capstyle='round', zorder=2)
+    beam_line, = ax.plot([], [], color='#ac6807', linewidth=7, solid_capstyle='round', zorder=2)
 
     # Loptica
     ball = plt.Circle((0, 0), 0.012, color=ball_color, zorder=6)
-    ax.add_patch(ball)
 
     # Info tekst (gore levo)
     info = ax.text(0.02, 0.97, '', transform=ax.transAxes, fontsize=8,
@@ -183,13 +195,13 @@ def run_visualization(Q, algo_name=''):
 
     # ── Dugme: pauza ──
     ax_pause = fig.add_axes([0.68, 0.03, 0.15, 0.08])
-    btn_pause = Button(ax_pause, '⏸  Pauza', color='#161b22', hovercolor='#21262d')
+    btn_pause = Button(ax_pause, '|| Pauza', color='#161b22', hovercolor='#21262d')
     btn_pause.label.set_color('#c9d1d9')
     btn_pause.label.set_fontsize(9)
 
     def toggle_pause(event):
         paused[0] = not paused[0]
-        btn_pause.label.set_text('▶  Nastavi' if paused[0] else '⏸  Pauza')
+        btn_pause.label.set_text('▶ Nastavi' if not paused[0] else '|| Pauza')
         fig.canvas.draw_idle()
 
     btn_pause.on_clicked(toggle_pause)
@@ -232,6 +244,10 @@ def run_visualization(Q, algo_name=''):
 
         # Loptica
         ball.center = (x * np.cos(va), x * np.sin(va) + env.r)
+        ax.add_patch(ball)
+
+        # Pivot
+        ax.plot(0, 0, 'o', color='#f9ff46', markersize=8, zorder=5)
 
         info.set_text(
             f'Ep. {ep[0]}  |  Korak: {step[0]}/{env.max_steps}'
@@ -256,7 +272,7 @@ if __name__ == '__main__':
     while True:
         result = show_menu(Q_ql, Q_sarsa)
         if result is None:
-            # Korisnik zatvorio meni — izlaz
+            # Izlaz - zatvoren meni
             break
         algo_name, Q = result
         ani = run_visualization(Q, algo_name)
